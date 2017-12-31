@@ -7,7 +7,7 @@
 #include <errno.h>
 
 /*
- *  ブロードキャスト情報
+ *  ブロードキャスト情報（送信用）
  */
 struct broadcast_info {
   unsigned short port;     /* ポート番号 */
@@ -24,7 +24,7 @@ typedef struct broadcast_info bc_info_t;
 int count = 0;  /* 送信カウント */
 
 /*
- *  ブロードキャスト情報
+ *  ブロードキャスト情報（受信用）
  */
 struct broadcast_info_r {
   unsigned short port;     /* ポート番号 */
@@ -151,7 +151,7 @@ broadcast_sendmsg(bc_info_t *info, bc_info_r *info_r, char *errmsg)
 
     printf("Sended\n" );
 
-    /*  */
+    /* すぐに受信する */
     recv_msglen = recvfrom(info_r->sd, recv_msg, MAXRECVSTRING, 0, NULL, 0);
     if(recv_msglen < 0){
       sprintf(errmsg, "(line:%d) %s", __LINE__, strerror(errno));
@@ -179,11 +179,11 @@ broadcast_sender(bc_info_t *info, bc_info_r *info_r, char *errmsg)
 {
   int rc = 0;
 
-  /* ソケットの初期化 */
+  /* ソケットの初期化（送信用） */
   rc = socket_initialize(info, errmsg);
   if(rc != 0) return(-1);
 
-  /*  */
+  /* ソケットの初期化（受信用） */
   rc = socket_initialize_r(info_r, errmsg);
   if(rc != 0) return(-1);
 
@@ -202,7 +202,8 @@ broadcast_sender(bc_info_t *info, bc_info_r *info_r, char *errmsg)
  * @brief      初期化処理。IPアドレスとポート番号を設定する。
  * @param[in]  argc   コマンドライン引数の数
  * @param[in]  argv   コマンドライン引数
- * @param[out] info   ブロードキャスト情報
+ * @param[out] info   ブロードキャスト情報（送信用）
+ * @param[out] info_r  ブロードキャスト情報（受信用）
  * @param[out] errmsg エラーメッセージ格納先
  * @return     成功ならば0、失敗ならば-1を返す。
  */
@@ -214,7 +215,7 @@ initialize(int argc, char *argv[], bc_info_t *info, bc_info_r *info_r, char *err
     return(-1);
   }
 
-  /*  */
+  /* 送信用の初期化設定 */
   memset(info, 0, sizeof(bc_info_t));
   info->ipaddr     = argv[1];
   info->port       = atoi(argv[2]);
@@ -222,7 +223,7 @@ initialize(int argc, char *argv[], bc_info_t *info, bc_info_r *info_r, char *err
   info->msg_len    = strlen(argv[3]);
   info->permission = 1;
 
-  /*  */
+  /* 受信用の初期化設定 */
   memset(info_r, 0, sizeof(bc_info_r));
   info_r->port       = atoi(argv[2]);
 
